@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dịch từ tệp txt</title>
+    <script src="qt.js"></script>
+</head>
+<body>
+
+<h1>Dịch từ tệp txt</h1>
+<p><a href="/">Dịch văn bản</a> | <a href="/upload.html">Dịch từ tệp txt</a> | <a href="/phantich.html">Phân tích</a></p>
+<input type="file" id="fileInput" accept="text/plain" />
+<button onclick="uploadAndReplace()">Tải lên</button>
+<p id="output"></p>
+
+<script>
+async function uploadAndReplace() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+
+  // Thêm dòng sau để hiển thị thông báo "Đang dịch..."
+  document.getElementById('output').innerText = 'Đang dịch...';
+
+    reader.onload = async function (e) {
+      try {
+        const chunkSize = 1000;
+        const originalText = e.target.result;
+        const chunks = chunkText(originalText, chunkSize);
+        const dictionary = new Dictionary();
+        await dictionary.initialize();
+
+        const translatedChunks = chunks.map(chunk => dictionary.translate(chunk));
+        const translatedText = translatedChunks.join('');
+
+        const blob = new Blob([translatedText], { type: 'text/plain' });
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = file.name;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        // Xóa thông báo khi quá trình dịch hoàn tất
+        document.getElementById('output').innerText = 'Dịch thành công';
+      } catch (error) {
+        alert('Dịch không thành công');
+        // Xóa thông báo khi quá trình dịch gặp lỗi
+        document.getElementById('output').innerText = '';
+      }
+    };
+
+    reader.readAsText(file);
+  } else {
+    alert('Vui lòng chọn một file.');
+  }
+}
+
+
+function chunkText(text, chunkSize) {
+  const chunks = [];
+  let start = 0;
+
+  while (start < text.length) {
+    let end = start + chunkSize;
+
+    // Tìm dấu "。" gần nhất trong khoảng 1000 ký tự
+    if (end < text.length) {
+      while (end < text.length && text[end] !== '。') {
+        end++;
+      }
+    }
+
+    // Đảm bảo không cắt giữa câu
+    if (end === text.length) {
+      chunks.push(text.slice(start));
+    } else {
+      chunks.push(text.slice(start, end + 1));
+      start = end + 1;
+    }
+  }
+
+  return chunks;
+}
+</script>
+
+</body>
+</html>

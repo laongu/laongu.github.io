@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VietPhrase App</title>
+    <script src="qt.js"></script>
+
+    <style>
+        button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #copyMessage {
+            color: green;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>VietPhrase App</h1>
+    <p><a href="/">Dịch văn bản</a> | <a href="/upload.html">Dịch từ tệp txt</a> | <a href="/phantich.html">Phân tích</a></p>
+    <form id="translationForm">
+        <label for="inputText">Nhập văn bản tiếng Trung:</label>
+        <textarea id="inputText" name="text" rows="20" style="width: 100%" required=""></textarea>
+        <button type="button" onclick="translateText()">Dịch</button>
+        <button type="button" onclick="copyText()">Copy</button>
+    </form>
+
+    <div id="copyMessage"></div>
+    <p id="outputText"></p>
+
+    <script>
+        async function translateText() {          
+            const inputTextElement = document.getElementById('inputText');
+            const outputTextElement = document.getElementById('outputText');
+
+            const inputText = inputTextElement.value;
+
+            if (inputText.trim() === '') {
+                outputTextElement.innerHTML = 'Vui lòng nhập tiếng Trung.';
+                return;
+            }
+
+            outputTextElement.innerHTML = 'Đang dịch...';
+
+            const dictionary = new Dictionary();
+            await dictionary.initialize();
+
+            const translatedText = dictionary.translate(inputText);
+            const formattedText = translatedText.replace(/\n/g, '<br>');
+
+            outputTextElement.innerHTML = formattedText;
+            clearCopyMessage();  // Xóa thông báo khi bắt đầu dịch mới
+        }
+
+        function copyText() {
+            const outputTextElement = document.getElementById('outputText');
+            const range = document.createRange();
+            range.selectNode(outputTextElement);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            window.getSelection().removeAllRanges();
+
+            showCopyMessage();  // Hiển thị thông báo khi đã sao chép
+        }
+
+        function showCopyMessage() {
+            const copyMessageElement = document.getElementById('copyMessage');
+            copyMessageElement.textContent = 'Đã sao chép!';
+        }
+
+        function clearCopyMessage() {
+            const copyMessageElement = document.getElementById('copyMessage');
+            copyMessageElement.textContent = '';
+        }
+    </script>
+</body>
+</html>

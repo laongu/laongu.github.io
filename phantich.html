@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân tích</title>
+    <style>
+        ul {
+            list-style-type: none; /* Loại bỏ dấu hiệu danh sách mặc định */
+            padding: 0; /* Loại bỏ padding mặc định của danh sách */
+        }
+
+        li {
+            margin-bottom: 10px; /* Khoảng cách giữa các mục trong danh sách */
+            padding: 10px; /* Độ rộng của từng mục trong danh sách */
+            border: 1px solid #ddd; /* Đường viền xung quanh mỗi mục */
+            background-color: #f9f9f9; /* Màu nền của mỗi mục */
+        }
+
+        button {
+            margin-left: 10px; /* Khoảng cách giữa nút Copy và nội dung li */
+        }
+    </style>
+</head>
+<body>
+    <h1>Phân tích</h1>
+    <p><a href="/">Dịch văn bản</a> | <a href="/upload.html">Dịch từ tệp txt</a> | <a href="/phantich.html">Phân tích</a></p>
+    <!-- Thêm sự kiện submit và truyền tham số event -->
+    <form id="searchForm" onsubmit="search(event)">
+        <label for="searchTerm">Nhập từ tiếng việt:</label>
+        <input type="text" placeholder="mỹ nhân" id="searchTerm" name="searchTerm" required>
+        <!-- Thay đổi nút tìm kiếm từ type="button" thành type="submit" -->
+        <button type="submit">Tìm kiếm</button>
+    </form>
+    <div id="alert"></div>
+    <div id="results"></div>
+
+    <script>
+        // Thêm hàm copyToClipboard() ngoài cùng script tag
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            const resultsElement = document.getElementById('alert');
+            resultsElement.innerHTML = `<p>Đã sao chép: ${text}</p>`;
+        }
+
+        function strSplit(string, length) {
+            const characters = Array.from(string);
+
+            if (length === null || length < 1) {
+                return characters;
+            }
+
+            const result = [];
+            for (let i = 0; i < characters.length; i += length) {
+                result.push(characters.slice(i, i + length).join(''));
+            }
+
+            return result;
+        }
+
+        function countWords(input) {
+            const wordArray = input.split(' ');
+            return wordArray.length;
+        }
+
+        function removeChinesePunctuation(inputString) {
+            return inputString.replace(/[\p{P}]/ug, '');
+        }
+
+        function buildStats(input, num) {
+            const results = {};
+
+            for (let key = 0; key < input.length - num + 1; key++) {
+                let phrase = '';
+
+                for (let i = 0; i < num; i++) {
+                    if (i !== 0) phrase += ' ';
+
+                    if (key + i < input.length) {
+                        phrase += input[key + i].toLowerCase();
+                    }
+                }
+
+                if (!results[phrase]) {
+                    results[phrase] = 1;
+                } else {
+                    results[phrase]++;
+                }
+            }
+
+            return results;
+        }
+
+        function search(event) {
+            event.preventDefault(); // Ngăn chặn sự kiện mặc định
+
+            const searchTermElement = document.getElementById('searchTerm');
+            const searchTerm = searchTermElement.value.trim();
+            const soLuongTu = countWords(searchTerm);
+            const foundWords = [];
+            const regex = new RegExp(searchTerm, 'i');
+
+            fetch('VietPhrase.txt')
+                .then(response => response.text())
+                .then(data => {
+                    const lines = data.split('\n');
+
+                    lines.forEach(line => {
+                        if (regex.test(line)) {
+                            const [key, value] = line.split('=');
+                            foundWords.push(key);
+                        }
+                    });
+
+                    const foundWordsText = foundWords.join(' ');
+                    const content = strSplit(foundWordsText, 1);
+
+                    const stats = buildStats(content, soLuongTu);
+                    const sortedResults = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+
+                    // Trong hàm search()
+                    // Thay thế phần hiển thị kết quả hiện tại
+
+                    const resultsElement = document.getElementById('results');
+                    resultsElement.innerHTML = '';
+
+                    const nonEmptyResults = sortedResults.filter(result => result[0].trim() !== '');
+
+                    if (nonEmptyResults.length >= 5) {
+                        const topFiveResults = nonEmptyResults.slice(0, 5);
+                        resultsElement.innerHTML += "<p>Năm kết quả có tần suất xuất hiện cao nhất:</p>";
+                        resultsElement.innerHTML += "<ul>";
+                        topFiveResults.forEach(result => {
+                            const cleanResult = result[0].replace(/\s/g, ''); // Xoá khoảng trắng
+                            resultsElement.innerHTML += `<li>${cleanResult} → ${result[1]} <button onclick="copyToClipboard('${cleanResult}')">Copy</button></li>`;
+                        });
+                        resultsElement.innerHTML += "</ul>";
+                    } else {
+                        resultsElement.innerHTML += "<p>Không có kết quả nào.</p>";
+                    }
+
+
+                });
+        }
+    </script>
+</body>
+</html>
