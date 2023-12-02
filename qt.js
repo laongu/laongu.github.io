@@ -99,14 +99,14 @@ class Dictionary {
 
         // Bước 3: Dịch từng từ và lọc bỏ một số từ không cần thiết
         const translations = splitText.map(word => {
-            // Bước 3.1: Kiểm tra từ điển tên
+            // Bước 3.1: Kiểm tra từ điển Names
             const translatedName = this.namesDictionary.get(word);
             if (translatedName !== undefined) {
                 // Nếu có nhiều nghĩa, lấy nghĩa đầu tiên
                 const firstMeaning = translatedName.split('/')[0];
                 return firstMeaning;
             } else {
-                // Bước 3.2: Tìm kiếm từ nếu không có trong từ điển tên
+                // Bước 3.2: Tìm kiếm từ vietphrase nếu không có trong từ điển Names
                 const searchResult = this.search(word);
                 return searchResult ? searchResult.split('/')[0] : word;
             }
