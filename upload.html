@@ -31,7 +31,7 @@ async function uploadAndReplace() {
         const originalText = e.target.result;
         const chunks = chunkText(originalText, chunkSize);
         const dictionary = new Dictionary();
-        await dictionary.initialize();
+        await dictionary.init();
 
         const translatedChunks = chunks.map(chunk => dictionary.translate(chunk));
         const translatedText = translatedChunks.join('');
