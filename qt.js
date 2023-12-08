@@ -11,9 +11,7 @@ class TrieNode {
 class Dictionary {
     constructor() {
         this.root = new TrieNode();        // Nút gốc của cây Trie
-        this.namesDictionary = new Map();   // Từ điển cho các tên
         this.phienAmDictionary = new Map(); // Từ điển cho phụ âm
-        this.cachedData = new Map();        // Cache dữ liệu từ tệp để tránh đọc lại nếu đã đọc rồi
     }
 
     // Phương thức thêm một từ vào cây Trie
@@ -40,15 +38,9 @@ class Dictionary {
     // Phương thức đọc dữ liệu từ điển từ một tệp trực tuyến
     async readDictionaryFile(fileName, processLine) {
         try {
-            if (this.cachedData.has(fileName)) {
-                const cachedContent = this.cachedData.get(fileName);
-                this.processLines(cachedContent, processLine);
-            } else {
-                const response = await fetch(fileName);         // Fetch dữ liệu từ tệp trực tuyến
-                const fileContent = await response.text();      // Đọc nội dung tệp
-                this.cachedData.set(fileName, fileContent);     // Lưu vào cache để sử dụng lại sau này
-                this.processLines(fileContent, processLine);    // Xử lý từng dòng dữ liệu
-            }
+            const response = await fetch(fileName);         // Fetch dữ liệu từ tệp trực tuyến
+            const fileContent = await response.text();      // Đọc nội dung tệp
+            this.processLines(fileContent, processLine);    // Xử lý từng dòng dữ liệu
         } catch (error) {
             console.error('Lỗi đọc file từ điển:', error);
         }
@@ -65,9 +57,9 @@ class Dictionary {
 
     // Phương thức tải toàn bộ từ điển từ các nguồn khác nhau
     async loadDictionaries() {
-        // Tải từ điển tên
+        // Tải từ điển Names
         const loadNames = this.readDictionaryFile('https://laongu.github.io/Names.txt', (key, value) => {
-            this.namesDictionary.set(key, value);
+            this.insert(key, value);
         });
 
         // Tải từ điển Việt-Trung
@@ -99,19 +91,10 @@ class Dictionary {
 
         // Bước 3: Dịch từng từ và lọc bỏ một số từ không cần thiết
         const translations = splitText.map(word => {
-            // Bước 3.1: Kiểm tra từ điển Names
-            const translatedName = this.namesDictionary.get(word);
-            if (translatedName !== undefined) {
-                // Nếu có nhiều nghĩa, lấy nghĩa đầu tiên
-                const firstMeaning = translatedName.split('/')[0];
-                return firstMeaning;
-            } else {
-                // Bước 3.2: Tìm kiếm từ vietphrase nếu không có trong từ điển Names
-                const searchResult = this.search(word);
-                return searchResult ? searchResult.split('/')[0] : word;
-            }
+            const searchResult = this.search(word);
+            return searchResult ? searchResult.split('/')[0] : word;
         })
-        .map(word => this.phienAmDictionary.get(word) || word); // Bước 3.3: Ánh xạ từ sang phiên âm nếu có
+        .map(word => this.phienAmDictionary.get(word) || word);
 
         // Bước 4: Xử lý văn bản và trả về kết quả dịch
         return this.processText(translations.join(' '));
@@ -228,7 +211,7 @@ class Dictionary {
     }
 
     // Phương thức khởi tạo: Tải toàn bộ từ điển khi khởi tạo đối tượng
-    async initialize() {
+    async init() {
         await this.loadDictionaries();
     }
 }
@@ -237,7 +220,7 @@ class Dictionary {
 // Hàm tự gọi khởi tạo đối tượng Dictionary và thực hiện dịch văn bản
 (async () => {
     const dictionary = new Dictionary();
-    await dictionary.initialize(); // Tải toàn bộ từ điển
+    await dictionary.init(); // Tải toàn bộ từ điển
 
     const inputText = '老五真帅气';
     const translatedText = dictionary.translate(inputText); // Dịch văn bản
