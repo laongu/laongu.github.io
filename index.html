@@ -51,7 +51,7 @@
             outputTextElement.innerHTML = 'Đang dịch...';
 
             const dictionary = new Dictionary();
-            await dictionary.initialize();
+            await dictionary.init();
 
             const translatedText = dictionary.translate(inputText);
             const formattedText = translatedText.replace(/\n/g, '<br>');
