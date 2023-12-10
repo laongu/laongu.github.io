@@ -29,8 +29,11 @@
     <form id="translationForm">
         <label for="inputText">Nhập văn bản tiếng Trung:</label>
         <textarea id="inputText" name="text" rows="20" style="width: 100%" required=""></textarea>
+
         <button type="button" onclick="translateText()">Dịch</button>
         <button type="button" onclick="copyText()">Copy</button>
+        <label for="hanViet">Hán việt: </label>
+        <input type="checkbox" id="hanViet" name="hanViet">
     </form>
 
     <div id="copyMessage"></div>
@@ -40,6 +43,7 @@
         async function translateText() {          
             const inputTextElement = document.getElementById('inputText');
             const outputTextElement = document.getElementById('outputText');
+            const hanViet = document.getElementById('hanViet');
 
             const inputText = inputTextElement.value;
 
@@ -53,7 +57,14 @@
             const dictionary = new Dictionary();
             await dictionary.init();
 
-            const translatedText = dictionary.translate(inputText);
+            let translatedText;
+            if (hanViet.checked) {
+                const mangHV = inputText.split('').map(word => dictionary.phienAmDictionary.get(word) || word);
+                translatedText = mangHV.join(' ');
+            } else {
+                translatedText = dictionary.translate(inputText);
+            }
+
             const formattedText = translatedText.replace(/\n/g, '<br>');
 
             outputTextElement.innerHTML = formattedText;
