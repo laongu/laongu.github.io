@@ -10,8 +10,9 @@ class TrieNode {
 // Lớp Dictionary quản lý các từ điển và thực hiện chức năng dịch
 class Dictionary {
     constructor() {
-        this.root = new TrieNode();        // Nút gốc của cây Trie
+        this.root = new TrieNode();         // Nút gốc của cây Trie
         this.phienAmDictionary = new Map(); // Từ điển cho phụ âm
+        this.cachedData = new Map();        // Cache dữ liệu từ tệp để tránh đọc lại nếu đã đọc rồi
     }
 
     // Phương thức thêm một từ vào cây Trie
@@ -38,9 +39,15 @@ class Dictionary {
     // Phương thức đọc dữ liệu từ điển từ một tệp trực tuyến
     async readDictionaryFile(fileName, processLine) {
         try {
-            const response = await fetch(fileName);         // Fetch dữ liệu từ tệp trực tuyến
-            const fileContent = await response.text();      // Đọc nội dung tệp
-            this.processLines(fileContent, processLine);    // Xử lý từng dòng dữ liệu
+            if (this.cachedData.has(fileName)) {
+                const cachedContent = this.cachedData.get(fileName);
+                this.processLines(cachedContent, processLine);
+            } else {
+                const response = await fetch(fileName);         // Fetch dữ liệu từ tệp trực tuyến
+                const fileContent = await response.text();      // Đọc nội dung tệp
+                this.cachedData.set(fileName, fileContent);     // Lưu vào cache để sử dụng lại sau này
+                this.processLines(fileContent, processLine);    // Xử lý từng dòng dữ liệu
+            }
         } catch (error) {
             console.error('Lỗi đọc file từ điển:', error);
         }
