@@ -43,10 +43,22 @@ class Dictionary {
                 const cachedContent = this.cachedData.get(fileName);
                 this.processLines(cachedContent, processLine);
             } else {
-                const response = await fetch(fileName);         // Fetch dữ liệu từ tệp trực tuyến
-                const fileContent = await response.text();      // Đọc nội dung tệp
-                this.cachedData.set(fileName, fileContent);     // Lưu vào cache để sử dụng lại sau này
-                this.processLines(fileContent, processLine);    // Xử lý từng dòng dữ liệu
+                const response = await fetch(fileName);
+                const reader = response.body.getReader(); // Sử dụng stream reader
+                let fileContent = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+
+                    if (done) {
+                        break;
+                    }
+
+                    fileContent += new TextDecoder().decode(value);
+                }
+
+                this.cachedData.set(fileName, fileContent);
+                this.processLines(fileContent, processLine);
             }
         } catch (error) {
             console.error('Lỗi đọc file từ điển:', error);
@@ -192,28 +204,17 @@ class Dictionary {
     }
 
     // Phương thức xử lý văn bản (loại bỏ khoảng trắng thừa, chuyển đổi chữ in hoa, v.v.)
-    processText(input) {
-        // Các biểu thức chính quy để xử lý văn bản
+    processText(text) {
         const trimSpacesBefore = / +([,.?!\]\>”’):])/g;
         const trimSpacesAfter = /([<\[“‘(]) +/g;
-        const capitalizeRegex = /(^\s*|[.!?“‘”’\[-]\s*)(\p{Ll})/gu;
-        const trimMultipleSpaces = / +/g;
+        const capitalizeRegex = /(^\s*|[.!?“‘”’\[-]\s*)(\p{Ll})/gmu;
+        const multipleSpaces = / +/g;
 
-        // Tách văn bản thành các dòng và loại bỏ khoảng trắng thừa
-        const lines = input.split('\n');
-        const processedLines = lines.map(line => line.trim());
+        const lines = text.split('\n').map(line => line.trim()).join('\n');
+        const trimmedLines = lines.replace(trimSpacesBefore, '$1').replace(trimSpacesAfter, '$1');
+        const processedText = trimmedLines.replace(capitalizeRegex, (_, p1, p2) => p1 + p2.toUpperCase());
+        const finalResult = processedText.replace(/[“‘”’]/g, '"').replace(multipleSpaces, ' ');
 
-        // Loại bỏ khoảng trắng thừa trước và sau dấu câu, chuyển đổi chữ in hoa
-        const trimmedStr1 = processedLines.join('\n').replace(trimSpacesBefore, '$1');
-        const trimmedStr2 = trimmedStr1.replace(trimSpacesAfter, '$1');
-
-        // Chuyển đổi chữ in hoa ở đầu mỗi câu
-        const processedText = trimmedStr2.replace(capitalizeRegex, (_, p1, p2) => p1 + p2.toUpperCase());
-
-        // Loại bỏ các dấu câu đặc biệt và thay thế nhiều khoảng trắng bằng một khoảng trắng
-        const finalResult = processedText.replace(/[“‘”’]/g, '"').replace(trimMultipleSpaces, ' ');
-
-        // Trả về văn bản đã xử lý
         return finalResult;
     }
 
