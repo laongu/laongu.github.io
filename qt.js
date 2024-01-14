@@ -186,7 +186,7 @@ class Dictionary {
     // Phương thức kiểm tra xem một ký tự có phải là ký tự Trung Quốc hay không
     isChineseCharacter(char) {
         const charCode = char.charCodeAt(0);
-        return charCode >= 0x4E00 && charCode <= 0x9FFF;
+        return charCode >= 0x4E00 && charCode <= 0x9FFF || char === '\n';
     }
 
     // Phương thức chuyển đổi dấu câu Trung Quốc sang chữ La-tinh
