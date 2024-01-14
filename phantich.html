@@ -48,7 +48,11 @@
             for (let i = 0; i < searchTermsArray.length; i++) {
                 const term = searchTermsArray[i];
                 const result = await search(term);
-                allResults.push({ name: displayNames[i], results: result });
+                
+                // Lọc bỏ giá trị rỗng, khoảng trắng hoặc null
+                const filteredResult = result.filter(value => value[0] && value[0].trim() !== '');
+                
+                allResults.push({ name: displayNames[i], results: filteredResult });
             }
 
             displayResults(allResults);
