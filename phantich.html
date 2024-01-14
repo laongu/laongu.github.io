@@ -36,6 +36,8 @@
 
     <script>
 
+        let vietPhraseContent = null;
+
         document.getElementById('searchForm').addEventListener('submit', async function (event) {
             event.preventDefault(); // Ngăn chặn hành động mặc định của biểu mẫu
             const searchTerm = document.getElementById('searchTerm').value;
@@ -94,30 +96,35 @@
         }
 
         async function search(searchTerm) {
+            if (!vietPhraseContent) {
+                vietPhraseContent = await fetchVietPhraseContent();
+            }
+
             const soLuongTu = countWords(searchTerm);
             const foundWords = [];
             const regex = new RegExp(searchTerm, 'i');
 
-            return fetch('VietPhrase.txt')
-                .then(response => response.text())
-                .then(data => {
-                    const lines = data.split('\n');
+            const lines = vietPhraseContent.split('\n');
 
-                    lines.forEach(line => {
-                        if (regex.test(line)) {
-                            const [key, value] = line.split('=');
-                            foundWords.push(key);
-                        }
-                    });
+            lines.forEach(line => {
+                if (regex.test(line)) {
+                    const [key, value] = line.split('=');
+                    foundWords.push(key);
+                }
+            });
 
-                    const foundWordsText = foundWords.join(' ');
-                    const content = strSplit(foundWordsText, 1);
+            const foundWordsText = foundWords.join(' ');
+            const content = strSplit(foundWordsText, 1);
 
-                    const stats = buildStats(content, soLuongTu);
-                    const sortedResults = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+            const stats = buildStats(content, soLuongTu);
+            const sortedResults = Object.entries(stats).sort((a, b) => b[1] - a[1]);
 
-                    return sortedResults;
-                });
+            return sortedResults;
+        }
+
+        async function fetchVietPhraseContent() {
+            const response = await fetch('VietPhrase.txt');
+            return response.text();
         }
 
         function strSplit(string, length) {
