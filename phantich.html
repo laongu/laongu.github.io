@@ -71,7 +71,7 @@
                     const topFiveResults = results.slice(0, 5);
                     resultsElement.innerHTML += "<ul>";
                     topFiveResults.forEach(result => {
-                        const cleanResult = result[0][0].replace(/\s/g, '');
+                        const cleanResult = result[0].replace(/\s/g, '');
                         resultsElement.innerHTML += `<li>${cleanResult} → ${result[1]} <button onclick="copyToClipboard('${cleanResult}')">Copy</button></li>`;
                     });
                     resultsElement.innerHTML += "</ul>";
