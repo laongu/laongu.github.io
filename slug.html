@@ -1,0 +1,76 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Change title to slug</title>
+</head>
+<body>
+    <form>
+        Title : <input type="text" id="title" value="" size="50" onkeyup="ChangeToSlug();" /><br /><br />
+        Slug : <input type="text" id="slug" value="" size="50" /><br /><br />
+        Uppercase Title : <input type="text" id="hoa" value="" size="50" />
+    </form>
+    <button onclick="myFunction1()">Copy title</button>
+    <button onclick="myFunction2()">Copy slug</button>
+    <button onclick="myFunction3()">Copy uppercase title</button>
+
+    <script language="javascript">
+        function ChangeToSlug() {
+            var title, slug, uppercaseTitle;
+
+            // Lấy text từ thẻ input title
+            title = document.getElementById("title").value;
+
+            // Chuyển hết sang chữ thường
+            slug = title.toLowerCase();
+
+            // Chuyển sang chữ hoa
+            uppercaseTitle = title.toUpperCase();
+
+            // xóa dấu và các ký tự đặt biệt, tạo slug và hiển thị trong trường nhập "slug"
+            slug = slug.replace(/(à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ)/g, 'a');
+            slug = slug.replace(/(è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ)/g, 'e');
+            slug = slug.replace(/(ì|í|ị|ỉ|ĩ)/g, 'i');
+            slug = slug.replace(/(ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ)/g, 'o');
+            slug = slug.replace(/(ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ)/g, 'u');
+            slug = slug.replace(/(ỳ|ý|ỵ|ỷ|ỹ)/g, 'y');
+            slug = slug.replace(/(đ)/g, 'd');
+            slug = slug.replace(/\'s/g, ' is');
+            slug = slug.replace(/[^a-z0-9]/g, ' ');
+            slug = slug.replace(/\s+/g, ' ');
+            slug = slug.trim();
+            slug = slug.replace(/ /g, "-");
+            document.getElementById('slug').value = slug;
+
+            // Hiển thị chữ hoa trong trường nhập "hoa"
+            document.getElementById('hoa').value = uppercaseTitle;
+        }
+    </script>
+    <script>
+        function myFunction1() {
+            var copyText = document.getElementById("title");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999)
+            document.execCommand("copy");
+            // alert("Copied the text: " + copyText.value);
+        }
+    </script>
+    <script>
+        function myFunction2() {
+            var copyText = document.getElementById("slug");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999)
+            document.execCommand("copy");
+            // alert("Copied the text: " + copyText.value);
+        }
+    </script>
+    <script>
+        function myFunction3() {
+            var copyText = document.getElementById("hoa");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999)
+            document.execCommand("copy");
+            // alert("Copied the text: " + copyText.value);
+        }
+    </script>
+</body>
+</html>
