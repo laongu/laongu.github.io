@@ -11,29 +11,8 @@ class TrieNode {
 class Dictionary {
     constructor() {
         this.root = new TrieNode();         // Nút gốc của cây Trie
-        this.phienAmDictionary = new Map(); // Từ điển cho phụ âm
+        this.phienAmDictionary = new Map(); // Từ điển cho phiên âm
         this.cachedData = new Map();        // Cache dữ liệu từ tệp để tránh đọc lại nếu đã đọc rồi
-    }
-
-    // Phương thức thêm một từ vào cây Trie
-    insert(key, value) {
-        let node = this.root;
-        for (const char of key) {
-            node.children.set(char, node.children.get(char) || new TrieNode());
-            node = node.children.get(char);
-        }
-        node.isEndOfWord = true;
-        node.translation = value;
-    }
-
-    // Phương thức tìm kiếm một từ trong cây Trie
-    search(key) {
-        let node = this.root;
-        for (const char of key) {
-            node = node.children.get(char);
-            if (!node) return null;
-        }
-        return node.isEndOfWord ? node.translation : null;
     }
 
     // Phương thức đọc dữ liệu từ điển từ một tệp trực tuyến
@@ -77,22 +56,43 @@ class Dictionary {
     // Phương thức tải toàn bộ từ điển từ các nguồn khác nhau
     async loadDictionaries() {
         // Tải từ điển Names
-        const loadNames = this.readDictionaryFile('https://laongu.github.io/Names.txt', (key, value) => {
+        const loadNames = this.readDictionaryFile('https://raw.githubusercontent.com/laongu/laongu.github.io/main/Names.txt', (key, value) => {
             this.insert(key, value);
         });
 
         // Tải từ điển Việt-Trung
-        const loadVietPhrase = this.readDictionaryFile('https://laongu.github.io/VietPhrase.txt', (key, value) => {
+        const loadVietPhrase = this.readDictionaryFile('https://raw.githubusercontent.com/laongu/laongu.github.io/main/VietPhrase.txt', (key, value) => {
             this.insert(key, value);
         });
 
-        // Tải từ điển phụ âm tiếng Trung
-        const loadChinesePhienAm = this.readDictionaryFile('https://laongu.github.io/ChinesePhienAmWords.txt', (key, value) => {
+        // Tải từ điển phiên âm tiếng Trung
+        const loadChinesePhienAm = this.readDictionaryFile('https://raw.githubusercontent.com/laongu/laongu.github.io/main/ChinesePhienAmWords.txt', (key, value) => {
             this.phienAmDictionary.set(key, value);
         });
 
         // Đợi cho đến khi tất cả các từ điển đã được tải xong
         await Promise.all([loadNames, loadVietPhrase, loadChinesePhienAm]);
+    }
+
+    // Phương thức thêm một từ vào cây Trie
+    insert(key, value) {
+        let node = this.root;
+        for (const char of key) {
+            node.children.set(char, node.children.get(char) || new TrieNode());
+            node = node.children.get(char);
+        }
+        node.isEndOfWord = true;
+        node.translation = value;
+    }
+
+    // Phương thức tìm kiếm một từ trong cây Trie
+    search(key) {
+        let node = this.root;
+        for (const char of key) {
+            node = node.children.get(char);
+            if (!node) return null;
+        }
+        return node.isEndOfWord ? node.translation : null;
     }
 
     /**
@@ -109,14 +109,14 @@ class Dictionary {
             .filter(word => word !== '的' && word !== '了' && word !== '著');
 
         // Bước 3: Dịch từng từ và lọc bỏ một số từ không cần thiết
-        const translations = splitText.map(word => {
+        const translatedText = splitText.map(word => {
             const searchResult = this.search(word);
-            return searchResult ? searchResult.split('/')[0] : word;
+            return searchResult ? searchResult.split(/[\/|]/)[0] : word;
         })
         .map(word => this.phienAmDictionary.get(word) || word);
 
         // Bước 4: Xử lý văn bản và trả về kết quả dịch
-        return this.processText(translations.join(' '));
+        return this.processText(translatedText.join(' '));
     }
 
     /**
@@ -217,13 +217,12 @@ class Dictionary {
         return trimmedText;
     }
 
-    // Phương thức khởi tạo: Tải toàn bộ từ điển khi khởi tạo đối tượng
+    // Hàm tự gọi khởi tạo đối tượng Dictionary và thực hiện dịch văn bản
     async init() {
         await this.loadDictionaries();
     }
 }
 
-/*
 // Hàm tự gọi khởi tạo đối tượng Dictionary và thực hiện dịch văn bản
 (async () => {
     const dictionary = new Dictionary();
@@ -233,4 +232,3 @@ class Dictionary {
     const translatedText = dictionary.translate(inputText); // Dịch văn bản
     console.log(translatedText); // In kết quả dịch ra console
 })();
-*/
